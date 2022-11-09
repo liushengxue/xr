@@ -87,3 +87,13 @@ CREATE TABLE
         name VARCHAR(255),
         is_delete int DEFAULT(0)
     ) COMMENT '';
+
+CREATE TABLE
+    order_num(
+        id int NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary Key',
+        create_time DATETIME COMMENT 'Create Time' DEFAULT CURRENT_TIMESTAMP,
+        num VARCHAR(255),
+        createBy VARCHAR(255),
+        custom_name VARCHAR(255),
+        is_delete INT DEFAULT(0)
+    ) COMMENT '';

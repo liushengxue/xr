@@ -295,14 +295,29 @@ router.post("/api/getModelAndBrandByType", (req, res) => {
   });
 });
 
+function uuid() {
+  var random_no = "";
+  for (var i = 0; i < 4; i++) {
+    random_no += Math.floor(Math.random() * 10);
+  }
+  random_no = `${random_no}-${new Date().getTime()}`;
+  return random_no;
+}
+
 router.post("/api/order/add", (req, res) => {
   let userId = req.session.userId;
   if (!userId) {
     return res.status(401).send("请先登录");
   }
   const { orderList, customInfo: c } = req.body;
+
+  let sql = "INSERT INTO order_num(num,custom_name,createBy) VALUES (?,?,?)";
+  const uid = uuid();
+  let params = [uid, c.customName, userId];
+  conn.query(sql, params, (error, results, fields) => {});
+
   let add_sql =
-    "INSERT INTO orders(createBy,type_id,model_id,brand_id,price,count,note,status,custom_name, custom_phone, custom_address,pay_type,deposit,total_price,express_name, express_phone,express_address) VALUES";
+    "INSERT INTO orders(order_num,createBy,type_id,model_id,brand_id,price,count,note,status,custom_name, custom_phone, custom_address,pay_type,deposit,total_price,express_name, express_phone,express_address) VALUES";
   orderList.forEach((i, index) => {
     const note = i.note === undefined ? null : `'${i.note}'`;
     const customName = c.customName === undefined ? null : `'${c.customName}'`;
@@ -321,7 +336,7 @@ router.post("/api/order/add", (req, res) => {
       c.expressAddress === undefined ? null : `'${c.expressAddress}'`;
     add_sql =
       add_sql +
-      `(${userId},${i.type},${i.model},${i.brand},${i.price},${i.count},${note},'未入库',${customName},${customPhone},${customAddress},${payType},${deposit},${totalPrice},${expressName},${expressPhone},${expressAddress})`;
+      `('${uid}',${userId},${i.type},${i.model},${i.brand},${i.price},${i.count},${note},'未入库',${customName},${customPhone},${customAddress},${payType},${deposit},${totalPrice},${expressName},${expressPhone},${expressAddress})`;
     if (index !== orderList.length - 1) {
       add_sql = add_sql + " ,";
     }
@@ -441,6 +456,26 @@ router.post("/api/storage/add", (req, res) => {
       res.json({ code: 400, message: "添加失败" });
     } else {
       res.json({ code: 200 });
+    }
+  });
+});
+
+router.post("/api/orderNum/list", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const name = req.body.name;
+  let sqlStr =
+    "SELECT o.*,u.name FROM order_num as o LEFT JOIN user_info as u on o.createBy = u.id WHERE is_delete != 1";
+  if (name) {
+    sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
+  }
+  conn.query(sqlStr, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "请求数据失败" });
+    } else {
+      res.json({ code: 200, result: results });
     }
   });
 });
