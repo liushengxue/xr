@@ -162,4 +162,287 @@ router.post("/api/product/delete", (req, res) => {
   });
 });
 
+router.post("/api/model/list", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const name = req.body.name;
+  let sqlStr = "SELECT * from model WHERE is_delete != 1";
+  if (name) {
+    sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
+  }
+  conn.query(sqlStr, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "请求数据失败" });
+    } else {
+      res.json({ code: 200, result: results });
+    }
+  });
+});
+
+router.post("/api/model/add", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { name, typeId } = req.body;
+  let add_sql = "INSERT INTO model(name,type_id,createBy) VALUES (?,?,?)";
+  let sql_params = [name, typeId, userId];
+  conn.query(add_sql, sql_params, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "添加失败" });
+    } else {
+      res.json({ code: 200 });
+    }
+  });
+});
+
+router.post("/api/model/delete", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { id } = req.body;
+  let sqlStr = "UPDATE model SET is_delete=? WHERE id =" + id;
+  let strParams = [1];
+  conn.query(sqlStr, strParams, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "删除失败" });
+    } else {
+      res.json({ code: 200 });
+    }
+  });
+});
+
+router.post("/api/brand/list", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const name = req.body.name;
+  let sqlStr = "SELECT * from brand WHERE is_delete != 1";
+  if (name) {
+    sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
+  }
+  conn.query(sqlStr, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "请求数据失败" });
+    } else {
+      res.json({ code: 200, result: results });
+    }
+  });
+});
+
+router.post("/api/brand/add", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { name, typeId } = req.body;
+  let add_sql = "INSERT INTO brand(name,type_id,createBy) VALUES (?,?,?)";
+  let sql_params = [name, typeId, userId];
+  conn.query(add_sql, sql_params, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "添加失败" });
+    } else {
+      res.json({ code: 200 });
+    }
+  });
+});
+
+router.post("/api/brand/delete", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { id } = req.body;
+  let sqlStr = "UPDATE brand SET is_delete=? WHERE id =" + id;
+  let strParams = [1];
+  conn.query(sqlStr, strParams, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "删除失败" });
+    } else {
+      res.json({ code: 200 });
+    }
+  });
+});
+
+router.post("/api/getModelAndBrandByType", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const typeId = req.body.typeId;
+  const result = { modelList: [], brandList: [] };
+  let sqlStr =
+    "SELECT * from brand WHERE type_id = " + typeId + " AND is_delete != 1";
+  conn.query(sqlStr, (error, results, fields) => {
+    if (!error) {
+      result.brandList = results;
+    }
+  });
+
+  let sqlStr2 =
+    "SELECT * from model WHERE type_id = " + typeId + " AND is_delete != 1";
+  conn.query(sqlStr2, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "删除失败" });
+    } else {
+      result.modelList = results;
+      res.json({ code: 200, result });
+    }
+  });
+});
+
+router.post("/api/order/add", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { orderList, customInfo: c } = req.body;
+  let add_sql =
+    "INSERT INTO orders(createBy,type_id,model_id,brand_id,price,count,note,status,custom_name, custom_phone, custom_address,pay_type,deposit,total_price,express_name, express_phone,express_address) VALUES";
+  orderList.forEach((i, index) => {
+    const note = i.note === undefined ? null : `'${i.note}'`;
+    const customName = c.customName === undefined ? null : `'${c.customName}'`;
+    const customPhone =
+      c.customPhone === undefined ? null : `'${c.customPhone}'`;
+    const customAddress =
+      c.customAddress === undefined ? null : `'${c.customAddress}'`;
+    const payType = c.payType === undefined ? null : `'${c.payType}'`;
+    const deposit = c.deposit === undefined ? null : `'${c.deposit}'`;
+    const totalPrice = c.totalPrice === undefined ? null : `'${c.totalPrice}'`;
+    const expressName =
+      c.expressName === undefined ? null : `'${c.expressName}'`;
+    const expressPhone =
+      c.expressPhone === undefined ? null : `'${c.expressPhone}'`;
+    const expressAddress =
+      c.expressAddress === undefined ? null : `'${c.expressAddress}'`;
+    add_sql =
+      add_sql +
+      `(${userId},${i.type},${i.model},${i.brand},${i.price},${i.count},${note},'未入库',${customName},${customPhone},${customAddress},${payType},${deposit},${totalPrice},${expressName},${expressPhone},${expressAddress})`;
+    if (index !== orderList.length - 1) {
+      add_sql = add_sql + " ,";
+    }
+    console.log(add_sql);
+  });
+  conn.query(add_sql, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "添加失败" });
+    } else {
+      res.json({ code: 200 });
+    }
+  });
+});
+
+router.post("/api/order/list/user", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const {
+    current = 1,
+    pageSize = 30,
+    startTime,
+    endTime,
+    customName,
+  } = req.body;
+  let query = `o.createBy = '${userId}'`;
+  if (startTime) {
+    query += ` AND o.create_time >= '${startTime}'`;
+  }
+  if (endTime) {
+    query += ` AND o.create_time <= '${endTime}'`;
+  }
+  if (customName) {
+    query += ` AND o.custom_name like '%${customName}%'`;
+  }
+  let sqlStr =
+    "SELECT o.*,p.name type_name, b.name brand_name, m.name model_name FROM orders as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id";
+
+  let sql = "SELECT count(*) total from orders";
+  if (query) {
+    sqlStr += ` WHERE ${query}`;
+    sql += ` WHERE ${query}`;
+  }
+
+  let total = null;
+  conn.query(sql, (error, results, fields) => {
+    if (!error) {
+      total = results[0].total;
+    }
+  });
+  sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
+  console.log(sqlStr);
+  conn.query(sqlStr, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "请求数据失败" });
+    } else {
+      res.json({
+        code: 200,
+        result: { list: results, pagination: { current, pageSize, total } },
+      });
+    }
+  });
+});
+
+router.post("/api/storage/list", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const name = req.body.name;
+  let sqlStr =
+    "SELECT o.*,p.name type_name, b.name brand_name, m.name model_name FROM storage as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id";
+  if (name) {
+    sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
+  }
+  conn.query(sqlStr, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "请求数据失败" });
+    } else {
+      res.json({ code: 200, result: results });
+    }
+  });
+});
+
+router.post("/api/storage/add", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const {
+    typeId,
+    modelId,
+    brandId,
+    count,
+    note,
+    storageAddress,
+    factory,
+    config,
+  } = req.body;
+  let add_sql =
+    "INSERT INTO storage(type_id,model_id,brand_id,count,note,storage_address,factory,createBy,config) VALUES (?,?,?,?,?,?,?,?,?)";
+  let sql_params = [
+    typeId,
+    modelId,
+    brandId,
+    count,
+    note,
+    storageAddress,
+    factory,
+    userId,
+    config,
+  ];
+
+  conn.query(add_sql, sql_params, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "添加失败" });
+    } else {
+      res.json({ code: 200 });
+    }
+  });
+});
+
 module.exports = router;
