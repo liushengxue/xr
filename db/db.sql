@@ -56,6 +56,8 @@ CREATE TABLE
         brand_id VARCHAR(255),
         price VARCHAR(255),
         count VARCHAR(255),
+        real_count VARCHAR(255),
+        sent_count VARCHAR(255),
         note VARCHAR(255),
         is_delete INT DEFAULT(0),
         status VARCHAR(255),

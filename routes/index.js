@@ -304,6 +304,57 @@ function uuid() {
   return random_no;
 }
 
+router.post("/api/order/list/", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const {
+    current = 1,
+    pageSize = 30,
+    startTime,
+    endTime,
+    customName,
+  } = req.body;
+  let query = "";
+  if (startTime) {
+    query += ` AND o.create_time >= '${startTime}'`;
+  }
+  if (endTime) {
+    query += ` AND o.create_time <= '${endTime}'`;
+  }
+  if (customName) {
+    query += ` AND o.custom_name like '%${customName}%'`;
+  }
+  let sqlStr =
+    "SELECT o.*,p.name type_name, b.name brand_name, m.name model_name FROM orders as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id";
+
+  let sql = "SELECT count(*) total from orders";
+  if (query) {
+    sqlStr += ` WHERE ${query}`;
+    sql += ` WHERE ${query}`;
+  }
+
+  let total = null;
+  conn.query(sql, (error, results, fields) => {
+    if (!error) {
+      total = results[0].total;
+    }
+  });
+  sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
+
+  conn.query(sqlStr, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "请求数据失败" });
+    } else {
+      res.json({
+        code: 200,
+        result: { list: results, pagination: { current, pageSize, total } },
+      });
+    }
+  });
+});
+
 router.post("/api/order/add", (req, res) => {
   let userId = req.session.userId;
   if (!userId) {
@@ -397,6 +448,28 @@ router.post("/api/order/list/user", (req, res) => {
       res.json({
         code: 200,
         result: { list: results, pagination: { current, pageSize, total } },
+      });
+    }
+  });
+});
+
+router.post("/api/order/listByNum", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { num } = req.body;
+  let sqlStr =
+    "SELECT o.*,p.name type_name, b.name brand_name, m.name model_name FROM orders as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id LEFT JOIN  order_num as n on n.num = o.order_num";
+  sqlStr += ` WHERE n.num = '${num}'`;
+  console.log(sqlStr);
+  conn.query(sqlStr, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "请求数据失败" });
+    } else {
+      res.json({
+        code: 200,
+        result: results,
       });
     }
   });
