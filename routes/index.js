@@ -107,7 +107,7 @@ router.post("/api/product/list", (req, res) => {
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
-  sqlStr += ` ORDER BY o.create_time desc`;
+  sqlStr += ` ORDER BY create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -161,7 +161,7 @@ router.post("/api/model/list", (req, res) => {
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
-  sqlStr += ` ORDER BY o.create_time desc`;
+  sqlStr += ` ORDER BY create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -215,7 +215,7 @@ router.post("/api/brand/list", (req, res) => {
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
-  sqlStr += ` ORDER BY o.create_time desc`;
+  sqlStr += ` ORDER BY create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });

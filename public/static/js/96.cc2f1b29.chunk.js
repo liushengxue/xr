@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkxr_static=self.webpackChunkxr_static||[]).push([[96],{9096:function(t,s,e){e.r(s);e(2791);var n=e(184);s.default=function(){return(0,n.jsxs)("div",{style:{display:"flex",justifyContent:"center",alignItems:"center"},children:[(0,n.jsx)("img",{src:"https://gw.alipayobjects.com/zos/rmsportal/KpnpchXsobRgLElEozzI.svg",alt:""}),(0,n.jsx)("h1",{style:{fontSize:20},children:"\u4f60\u8bbf\u95ee\u7684\u9875\u9762\u4e0d\u5b58\u5728"})]})}}}]);
+//# sourceMappingURL=96.cc2f1b29.chunk.js.map
