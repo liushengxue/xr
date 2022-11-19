@@ -39,18 +39,6 @@ router.post("/api/change_user_msg", (req, res) => {
 });
 
 // xr
-router.get("/api/test", (req, res) => {
-  let user_id = req.body.user_id;
-  let sqlStr = "SELECT * from test";
-  conn.query(sqlStr, (error, results, fields) => {
-    if (error) {
-      res.json({ err_code: 0, message: "请求数据失败" });
-    } else {
-      res.json({ success_code: 200, message: results });
-    }
-  });
-});
-
 /* 用户名和密码登陆 */
 router.post("/api/login", (req, res) => {
   const user_name = req.body.username;
@@ -115,10 +103,11 @@ router.post("/api/product/list", (req, res) => {
     return res.status(401).send("请先登录");
   }
   const name = req.body.name;
-  let sqlStr = "SELECT * from product WHERE is_delete = 0";
+  let sqlStr = "SELECT * from product WHERE is_delete = 0 ";
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
+  sqlStr += ` ORDER BY o.create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -168,10 +157,11 @@ router.post("/api/model/list", (req, res) => {
     return res.status(401).send("请先登录");
   }
   const name = req.body.name;
-  let sqlStr = "SELECT * from model WHERE is_delete != 1";
+  let sqlStr = "SELECT * from model WHERE is_delete != 1 ";
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
+  sqlStr += ` ORDER BY o.create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -225,6 +215,7 @@ router.post("/api/brand/list", (req, res) => {
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
+  sqlStr += ` ORDER BY o.create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -316,7 +307,7 @@ router.post("/api/order/list/", (req, res) => {
     endTime,
     customName,
   } = req.body;
-  let query = "";
+  let query = "1 = 1";
   if (startTime) {
     query += ` AND o.create_time >= '${startTime}'`;
   }
@@ -326,8 +317,9 @@ router.post("/api/order/list/", (req, res) => {
   if (customName) {
     query += ` AND o.custom_name like '%${customName}%'`;
   }
+  query += ` ORDER BY o.create_time desc`;
   let sqlStr =
-    "SELECT o.*,p.name type_name, b.name brand_name, m.name model_name FROM orders as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id";
+    "SELECT o.*,p.name type_name,u.name create_by_nickname, b.name brand_name, m.name model_name FROM orders as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id LEFT JOIN user_info as u on u.id = o.createBy";
 
   let sql = "SELECT count(*) total from orders";
   if (query) {
@@ -402,6 +394,62 @@ router.post("/api/order/add", (req, res) => {
   });
 });
 
+router.post("/api/order/update", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { realCount, status, storageAddress, id } = req.body;
+
+  let sqlStr =
+    "UPDATE orders SET real_count=?, status=?,storage_address=? WHERE id =" +
+    id;
+  let strParams = [realCount, status, storageAddress];
+  conn.query(sqlStr, strParams, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "修改失败" });
+    } else {
+      res.json({ code: 200, message: "修改成功" });
+    }
+  });
+});
+
+router.post("/api/order/updateSentCount", (req, res) => {
+  let userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send("请先登录");
+  }
+  const { payload = [] } = req.body;
+
+  let sql = `UPDATE orders SET sent_count = CASE id `;
+  payload.forEach((item, index) => {
+    sql += ` WHEN ${item.id} THEN '${item.sendCount}'`;
+    if (index === payload.length - 1) {
+      sql += ` END, status = CASE id`;
+    }
+  });
+  payload.forEach((item, index) => {
+    sql += ` WHEN ${item.id} THEN '已打单'`;
+    if (index === payload.length - 1) {
+      sql += ` END WHERE id IN (`;
+    }
+  });
+  payload.forEach((item, index) => {
+    sql += `${item.id},`;
+    if (index === payload.length - 1) {
+      sql += `${item.id})`;
+    }
+  });
+
+  conn.query(sql, (error, results, fields) => {
+    if (error) {
+      res.json({ code: 400, message: "修改失败" });
+    } else {
+      res.json({ code: 200, message: "修改成功" });
+    }
+  });
+});
+
 router.post("/api/order/list/user", (req, res) => {
   let userId = req.session.userId;
   if (!userId) {
@@ -440,7 +488,7 @@ router.post("/api/order/list/user", (req, res) => {
     }
   });
   sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
-  console.log(sqlStr);
+
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -461,8 +509,8 @@ router.post("/api/order/listByNum", (req, res) => {
   const { num } = req.body;
   let sqlStr =
     "SELECT o.*,p.name type_name, b.name brand_name, m.name model_name FROM orders as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id LEFT JOIN  order_num as n on n.num = o.order_num";
-  sqlStr += ` WHERE n.num = '${num}'`;
-  console.log(sqlStr);
+  sqlStr += ` WHERE n.num = '${num}' ORDER BY o.create_time desc`;
+
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -486,6 +534,7 @@ router.post("/api/storage/list", (req, res) => {
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
+  sqlStr += ` ORDER BY o.create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -540,10 +589,11 @@ router.post("/api/orderNum/list", (req, res) => {
   }
   const name = req.body.name;
   let sqlStr =
-    "SELECT o.*,u.name FROM order_num as o LEFT JOIN user_info as u on o.createBy = u.id WHERE is_delete != 1";
+    "SELECT o.*,u.name FROM order_num as o LEFT JOIN user_info as u on o.createBy = u.id WHERE is_delete != 1 ";
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
+  sqlStr += ` ORDER BY o.create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
