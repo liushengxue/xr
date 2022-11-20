@@ -37,6 +37,14 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 
+// 解决刷新404
+app.all("*", (req, res, next) => {
+  res.set({
+    "Content-Type": "text/html; charset=utf-8",
+  });
+  res.sendFile(path.join(__dirname, "/public/index.html"));
+});
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

@@ -333,8 +333,8 @@ router.post("/api/order/list/", (req, res) => {
       total = results[0].total;
     }
   });
-  sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
-
+  sqlStr += ` ORDER BY o.create_time desc`;
+  // sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });
@@ -487,8 +487,7 @@ router.post("/api/order/list/user", (req, res) => {
       total = results[0].total;
     }
   });
-  sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
-
+  sqlStr += ` ORDER BY o.create_time desc`;
   conn.query(sqlStr, (error, results, fields) => {
     if (error) {
       res.json({ code: 400, message: "请求数据失败" });

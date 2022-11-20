@@ -7,12 +7,11 @@
 let app = require('../app');
 let debug = require('debug')('pdd-api:server');
 let http = require('http');
-
 /**
  * Get port from environment and store in Express.
  */
 
-let port = normalizePort(process.env.PORT || '5050');
+let port = normalizePort(process.env.PORT || '80');
 app.set('port', port);
 
 /**
