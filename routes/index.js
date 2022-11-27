@@ -328,11 +328,11 @@ router.post("/api/order/list/", (req, res) => {
   }
 
   let total = null;
-  conn.query(sql, (error, results, fields) => {
-    if (!error) {
-      total = results[0].total;
-    }
-  });
+  // conn.query(sql, (error, results, fields) => {
+  //   if (!error) {
+  //     total = results[0].total;
+  //   }
+  // });
   sqlStr += ` ORDER BY o.create_time desc`;
   // sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
   conn.query(sqlStr, (error, results, fields) => {
@@ -588,7 +588,7 @@ router.post("/api/orderNum/list", (req, res) => {
   }
   const name = req.body.name;
   let sqlStr =
-    "SELECT o.*,u.name FROM order_num as o LEFT JOIN user_info as u on o.createBy = u.id WHERE is_delete != 1 ";
+    "SELECT o.*,u.name FROM order_num as o LEFT JOIN user_info as u on o.createBy = u.id WHERE o.is_delete != 1 ";
   if (name) {
     sqlStr = sqlStr + " AND name LIKE '%" + name + "%'";
   }
