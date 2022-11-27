@@ -321,23 +321,14 @@ router.post("/api/order/list/", (req, res) => {
   let sqlStr =
     "SELECT o.*,p.name type_name,u.name create_by_nickname, b.name brand_name, m.name model_name FROM orders as o LEFT JOIN product as p on o.type_id = p.id LEFT JOIN brand  as b on b.id = o.brand_id LEFT JOIN model as m on m.id = o.model_id LEFT JOIN user_info as u on u.id = o.createBy";
 
-  let sql = "SELECT count(*) total from orders";
-  if (query) {
-    sqlStr += ` WHERE ${query}`;
-    sql += ` WHERE ${query}`;
-  }
+  sqlStr += ` WHERE ${query}`;
 
   let total = null;
-  // conn.query(sql, (error, results, fields) => {
-  //   if (!error) {
-  //     total = results[0].total;
-  //   }
-  // });
-  sqlStr += ` ORDER BY o.create_time desc`;
-  // sqlStr = sqlStr + ` LIMIT ${(current - 1) * pageSize}, ${pageSize}`;
+
   conn.query(sqlStr, (error, results, fields) => {
+    console.log(sqlStr);
     if (error) {
-      res.json({ code: 400, message: "请求数据失败" });
+      res.json({ code: 400, message: error });
     } else {
       res.json({
         code: 200,
