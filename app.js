@@ -4,11 +4,13 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const session = require("express-session");
+const compression = require("compression");
 
 const indexRouter = require("./routes/index");
 
 const app = express();
 
+app.use(compression());
 app.use(
   session({
     secret: "1234568979869", // 对session id相关的cookie 进行签名
