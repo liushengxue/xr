@@ -22,6 +22,7 @@ CREATE TABLE
         id int NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary Key',
         create_time DATETIME COMMENT 'Create Time' DEFAULT CURRENT_TIMESTAMP,
         name VARCHAR(255),
+        createBy VARCHAR(255),
         is_delete INT DEFAULT(0)
     ) COMMENT '';
 
@@ -69,6 +70,7 @@ CREATE TABLE
         deposit VARCHAR(255),
         total_price VARCHAR(255),
         express_name VARCHAR(255),
+        order_num VARCHAR(255),
         express_phone VARCHAR(255),
         express_address VARCHAR(255)
     ) COMMENT '';
